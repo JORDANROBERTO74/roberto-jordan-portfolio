@@ -4,7 +4,7 @@ import React from "react";
 import { motion } from "framer-motion";
 import TypewriterAnimation from "@/components/typewriterAnimation";
 import { Separator } from "@/components/ui/separator";
-import Link from "next/dist/client/link";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { TooltipContent } from "@/components/ui/tooltip";
 import { socialMedias } from "@/components/common/socialMedias";
@@ -18,7 +18,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Mail } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMessages } from "next-intl";
-import { useContactForm } from "@/hooks/useContactForm";
+import { sendContactForm } from "@/lib/sendContactForm";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
@@ -44,7 +44,7 @@ const Page = () => {
   const messages = useMessages();
   const { toast } = useToast();
   const [isVisible, setIsVisible] = React.useState(false);
-  const { mutateAsync, isLoading } = useContactForm();
+  const [isSending, setIsSending] = React.useState(false);
 
   const object: any = messages?.contact;
 
@@ -59,25 +59,32 @@ const Page = () => {
   });
 
   const onSubmit = async (data: z.infer<typeof formSchema>) => {
-    const response = await mutateAsync({
-      name: data.name,
-      email: data.email,
-      subject: data.subject,
-      message: data.message,
-      time: moment().format("D MMM YYYY, HH:mm"),
-    });
-    if (response?.status === 200) {
-      form.reset();
-      toast({
-        title: object?.sendEmail?.success?.title,
-        description: object?.sendEmail?.success?.subtitle,
+    setIsSending(true);
+    try {
+      const response = await sendContactForm({
+        name: data.name,
+        email: data.email,
+        subject: data.subject,
+        message: data.message,
+        time: moment().format("D MMM YYYY, HH:mm"),
       });
-    } else {
+      if (response.status === 200) {
+        form.reset();
+        toast({
+          title: object?.sendEmail?.success?.title,
+          description: object?.sendEmail?.success?.subtitle,
+        });
+      } else {
+        throw new Error(`EmailJS responded with ${response.status}`);
+      }
+    } catch {
       toast({
         title: object?.sendEmail?.error?.title,
         description: object?.sendEmail?.error?.subtitle,
         variant: "destructive",
       });
+    } finally {
+      setIsSending(false);
     }
   };
 
@@ -281,8 +288,8 @@ const Page = () => {
                 />
               </div>
 
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? (
+              <Button type="submit" className="w-full" disabled={isSending}>
+                {isSending ? (
                   "Sending..."
                 ) : (
                   <>

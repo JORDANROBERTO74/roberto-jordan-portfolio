@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { useMessages } from "next-intl";
 import { socialMedias } from "@/components/common/socialMedias";
 import { Button } from "@/components/ui/button";
@@ -28,9 +28,9 @@ const Footer = () => {
                 <Tooltip>
                   <TooltipTrigger asChild>
                     <Link
-                      key={socialMedia?.name}
                       href={socialMedia?.url}
                       target="_blank"
+                      rel="noopener noreferrer"
                     >
                       <Button variant="outline" size="icon">
                         {socialMedia?.icon}
@@ -45,7 +45,10 @@ const Footer = () => {
               </TooltipProvider>
             ))}
           </div>
-          <nav className="hidden md:flex justify-end gap-6 w-full">
+          <nav
+            aria-label={object?.menu?.label}
+            className="hidden md:flex justify-end gap-6 w-full"
+          >
             {object?.menu?.items?.map((item: any) => (
               <Link
                 key={item.href}

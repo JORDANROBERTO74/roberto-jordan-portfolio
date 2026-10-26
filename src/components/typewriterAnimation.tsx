@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 
 interface TypewriterAnimationProps {
   texts: {
-    type: string;
+    type: "h1" | "h2" | "p" | "span";
     content: string;
     className: string;
   }[];
@@ -13,7 +13,7 @@ export default function TypewriterAnimation({
   texts,
 }: TypewriterAnimationProps) {
   const [displayedTexts, setDisplayedTexts] = React.useState(
-    Array(texts.length).fill("")
+    Array(texts.length).fill(""),
   );
   const [currentIndex, setCurrentIndex] = React.useState(0);
 
@@ -27,7 +27,7 @@ export default function TypewriterAnimation({
           const updated = [...prev];
           updated[currentIndex] = texts[currentIndex].content.slice(
             0,
-            index + 1
+            index + 1,
           );
           return updated;
         });
@@ -44,7 +44,7 @@ export default function TypewriterAnimation({
   return (
     <div>
       {displayedTexts?.map((text: string, i: number) => {
-        const Tag = texts[i].type as keyof JSX.IntrinsicElements;
+        const Component = texts[i].type as React.ElementType;
         return (
           <motion.div
             key={i}
@@ -53,7 +53,7 @@ export default function TypewriterAnimation({
             transition={{ duration: 0.5 }}
             className="py-2"
           >
-            <Tag className={texts[i].className}>
+            <Component className={texts[i].className}>
               {text}
               {i === currentIndex && (
                 <motion.span
@@ -63,7 +63,7 @@ export default function TypewriterAnimation({
                   |
                 </motion.span>
               )}
-            </Tag>
+            </Component>
           </motion.div>
         );
       })}

@@ -8,10 +8,11 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { Suspense } from "react";
 import { Spinner } from "@/components/ui/spinner";
 import MainContent from "@/components/navigation/MainContent";
-import { NextIntlClientProvider } from "next-intl";
-import { getMessages } from "next-intl/server";
+import { hasLocale, NextIntlClientProvider } from "next-intl";
+import { getMessages, setRequestLocale } from "next-intl/server";
+import { notFound } from "next/navigation";
 import { Toaster } from "@/components/ui/toaster";
-import ClientProvider from "@/components/clientProvider";
+import { routing } from "@/i18n/routing";
 
 const fontSans = FontSans({
   subsets: ["latin"],
@@ -30,29 +31,42 @@ export const metadata: Metadata = {
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
-  minimumScale: 1,
-  maximumScale: 1,
+  themeColor: [
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+    { media: "(prefers-color-scheme: dark)", color: "#0a0a0a" },
+  ],
 };
+
+export function generateStaticParams() {
+  return routing.locales.map((locale) => ({ locale }));
+}
 
 interface RootLayoutProps {
   children: React.ReactNode;
-  params: {
-    locale: string;
-  };
+  params: Promise<{ locale: string }>;
 }
+
 export default async function RootLayout({
   children,
-  params: { locale },
+  params,
 }: Readonly<RootLayoutProps>) {
+  const { locale } = await params;
+
+  if (!hasLocale(routing.locales, locale)) {
+    notFound();
+  }
+
+  setRequestLocale(locale);
   const messages = await getMessages();
 
   return (
     <html lang={locale} suppressHydrationWarning>
-      <head>
-        <meta charSet="UTF-8" />
-        <link rel="icon" href="/favicon.ico" />
-      </head>
-      <body className={cn("font-sans antialiased h-screen", fontSans.variable)}>
+      <body
+        className={cn(
+          "font-sans antialiased min-h-screen",
+          fontSans.variable,
+        )}
+      >
         <ThemeProvider
           attribute="class"
           defaultTheme="light"
@@ -66,14 +80,12 @@ export default async function RootLayout({
               </div>
             }
           >
-            <ClientProvider>
-              <NextIntlClientProvider messages={messages}>
-                <Header />
-                <MainContent>{children}</MainContent>
-                <Footer />
-                <Toaster />
-              </NextIntlClientProvider>
-            </ClientProvider>
+            <NextIntlClientProvider messages={messages}>
+              <Header />
+              <MainContent>{children}</MainContent>
+              <Footer />
+              <Toaster />
+            </NextIntlClientProvider>
           </Suspense>
         </ThemeProvider>
       </body>

@@ -10,15 +10,14 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useMessages, useLocale } from "next-intl";
+import { useMessages } from "next-intl";
 import { Separator } from "@/components/ui/separator";
-import { useRouter } from "next/navigation";
+import { useRouter } from "@/i18n/navigation";
 import { motion } from "framer-motion";
 import TypewriterAnimation from "@/components/typewriterAnimation";
 import ProjectCard from "@/components/projectCard";
 
 export default function Home() {
-  const locale = useLocale();
   const router = useRouter();
   const messages = useMessages();
 
@@ -130,9 +129,7 @@ export default function Home() {
         </div>
         <div className="flex items-center gap-6">
           <Button
-            onClick={() =>
-              router.push(`/${locale}/${object?.projects?.viewAllButton?.href}`)
-            }
+            onClick={() => router.push(object?.projects?.viewAllButton?.href)}
           >
             {object?.projects?.viewAllButton?.label}
           </Button>
