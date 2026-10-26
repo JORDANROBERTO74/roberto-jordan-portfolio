@@ -1,311 +1,97 @@
-"use client";
-
-import React from "react";
-import { motion } from "framer-motion";
-import TypewriterAnimation from "@/components/typewriterAnimation";
-import { Separator } from "@/components/ui/separator";
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { TooltipContent } from "@/components/ui/tooltip";
+import { setRequestLocale } from "next-intl/server";
+import { getContent } from "@/content";
+import type { Locale } from "@/content/types";
+import { pageMetadata } from "@/lib/metadata";
+import ContactForm from "@/components/contact-form";
 import { socialMedias } from "@/components/common/socialMedias";
-import {
-  Tooltip,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Mail } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
-import { useMessages } from "next-intl";
-import { sendContactForm } from "@/lib/sendContactForm";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { z } from "zod";
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import moment from "moment";
 
-const formSchema = z.object({
-  name: z.string(),
-  email: z.string(),
-  subject: z.string(),
-  message: z.string(),
-});
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  const content = getContent(locale as Locale);
 
-const Page = () => {
-  const messages = useMessages();
-  const { toast } = useToast();
-  const [isVisible, setIsVisible] = React.useState(false);
-  const [isSending, setIsSending] = React.useState(false);
-
-  const object: any = messages?.contact;
-
-  const form = useForm<z.infer<typeof formSchema>>({
-    resolver: zodResolver(formSchema),
-    defaultValues: {
-      name: "",
-      email: "",
-      subject: "",
-      message: "",
-    },
+  return pageMetadata({
+    locale: locale as Locale,
+    path: "/contact",
+    title: content.contact.eyebrow,
+    description: content.contact.lead,
   });
+}
 
-  const onSubmit = async (data: z.infer<typeof formSchema>) => {
-    setIsSending(true);
-    try {
-      const response = await sendContactForm({
-        name: data.name,
-        email: data.email,
-        subject: data.subject,
-        message: data.message,
-        time: moment().format("D MMM YYYY, HH:mm"),
-      });
-      if (response.status === 200) {
-        form.reset();
-        toast({
-          title: object?.sendEmail?.success?.title,
-          description: object?.sendEmail?.success?.subtitle,
-        });
-      } else {
-        throw new Error(`EmailJS responded with ${response.status}`);
-      }
-    } catch {
-      toast({
-        title: object?.sendEmail?.error?.title,
-        description: object?.sendEmail?.error?.subtitle,
-        variant: "destructive",
-      });
-    } finally {
-      setIsSending(false);
-    }
-  };
+export default async function ContactPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  const typedLocale = locale as Locale;
+  setRequestLocale(locale);
 
-  React.useEffect(() => {
-    setTimeout(() => {
-      setIsVisible(true);
-    }, 6000);
-  }, []);
+  const contact = getContent(typedLocale).contact;
+  const email = socialMedias
+    .find((item) => item.url.startsWith("mailto:"))
+    ?.url.replace("mailto:", "");
 
   return (
-    <div>
-      <div className="w-full h-full md:h-[82vh] flex items-start justify-center pb-[10vh]">
-        <div className="flex flex-col md:flex-row items-center gap-16 md:gap-6 w-full h-full">
-          <div className="flex flex-col justify-center gap-2 w-full h-full">
-            <TypewriterAnimation
-              texts={[
-                {
-                  type: "h1",
-                  content: object?.title,
-                  className: "text-6xl font-bold tracking-tighter md:text-8xl",
-                },
-                {
-                  type: "p",
-                  content: object?.subtitle,
-                  className: "text-gray-500 text-2xl dark:text-gray-400",
-                },
-              ]}
-            />
-            <motion.p
-              className="text-xl"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 7.5, duration: 1 }}
+    <>
+      <section className="border-b border-border">
+        <div className="container-page grid gap-12 py-16 md:py-24 lg:grid-cols-12">
+          <div className="lg:col-span-8">
+            <p className="label-mono">{contact.eyebrow}</p>
+            <h1 className="mt-8 max-w-4xl font-display text-[clamp(2.5rem,6vw,5rem)] leading-[0.98] tracking-[-0.02em] text-balance">
+              {contact.title}
+            </h1>
+            <p className="mt-8 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">
+              {contact.lead}
+            </p>
+          </div>
+
+          <div className="self-end lg:col-span-3 lg:col-start-10">
+            <p className="label-mono">{contact.emailLabel}</p>
+            <a
+              href={`mailto:${email}`}
+              className="mt-3 block border-b border-primary pb-1 text-sm transition-colors hover:text-primary"
             >
-              {object?.paragraph1}
-            </motion.p>
-          </div>
-          <div className="flex items-center justify-center w-full h-full">
-            <div className="flex items-center gap-5">
-              {socialMedias?.map((socialMedia, index) => {
-                const delay = index * 0.5 * 1000;
-
-                return (
-                  <TooltipProvider key={socialMedia?.name}>
-                    <Tooltip>
-                      <TooltipTrigger
-                        asChild
-                        style={{
-                          transitionDelay: `${delay}ms`,
-                        }}
-                        className={`transition duration-300 ease-in-out ${
-                          isVisible ? "opacity-100" : "opacity-0 cursor-default"
-                        }`}
-                      >
-                        <Link
-                          key={socialMedia?.name}
-                          href={socialMedia?.url}
-                          target="_blank"
-                        >
-                          <Button
-                            size="icon"
-                            variant="outline"
-                            className="w-fit p-6 text-[20px]"
-                          >
-                            {socialMedia?.icon}
-                            <span className="sr-only">{socialMedia?.name}</span>
-                          </Button>
-                        </Link>
-                      </TooltipTrigger>
-                      <TooltipContent side="top">
-                        <p>{socialMedia?.name}</p>
-                      </TooltipContent>
-                    </Tooltip>
-                  </TooltipProvider>
-                );
-              })}
+              {email}
+            </a>
+            <p className="label-mono mt-8">{contact.socialLabel}</p>
+            <div className="mt-3 flex flex-col gap-2">
+              {socialMedias
+                .filter((item) => !item.url.startsWith("mailto:"))
+                .map((item) => (
+                  <a
+                    key={item.name}
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="w-fit text-sm transition-colors hover:text-primary"
+                  >
+                    {item.name} ↗
+                  </a>
+                ))}
             </div>
           </div>
         </div>
-      </div>
+      </section>
 
-      <div className="w-full h-full md:min-h-[100vh] flex flex-col gap-10 items-center justify-center py-10 md:py-0">
-        <div className="flex flex-col gap-2 w-full">
-          <div className="flex items-center gap-6 justify-between w-full">
-            <div className="hidden md:block w-full">
-              <Separator />
-            </div>
-            <div className="text-center text-2xl font-bold w-full md:max-w-fit">
-              {object?.sendEmail?.title}
-            </div>
-            <div className="hidden md:block w-full">
-              <Separator />
-            </div>
+      <section className="container-page py-16 md:py-24">
+        <div className="grid gap-10 md:grid-cols-12">
+          <div className="md:col-span-4">
+            <h2 className="font-display text-3xl tracking-tight md:text-4xl">
+              {contact.formTitle}
+            </h2>
+            <p className="mt-4 max-w-xs text-sm leading-relaxed text-muted-foreground">
+              {contact.note}
+            </p>
           </div>
-          <div className="text-center gap-2 text-gray-500 md:text-xl dark:text-gray-400">
-            <span className="mr-2">{object?.sendEmail?.subtitle}</span>
+          <div className="md:col-span-7 md:col-start-6">
+            <ContactForm />
           </div>
         </div>
-        <div className="w-full md:w-1/2">
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-              <div className="space-y-2">
-                <FormField
-                  control={form.control}
-                  name="name"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel htmlFor="name">
-                        {object?.sendEmail?.form?.name?.label}
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          id="name"
-                          required
-                          placeholder={
-                            object?.sendEmail?.form?.name?.placeholder
-                          }
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormDescription />
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="space-y-2">
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel htmlFor="email">
-                        {object?.sendEmail?.form?.email?.label}
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          required
-                          type="email"
-                          id="email"
-                          placeholder={
-                            object?.sendEmail?.form?.email?.placeholder
-                          }
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormDescription />
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="space-y-2">
-                <FormField
-                  control={form.control}
-                  name="subject"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel htmlFor="subject">
-                        {object?.sendEmail?.form?.subject?.label}
-                      </FormLabel>
-                      <FormControl>
-                        <Input
-                          id="subject"
-                          required
-                          placeholder={
-                            object?.sendEmail?.form?.subject?.placeholder
-                          }
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormDescription />
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-              <div className="space-y-2">
-                <FormField
-                  control={form.control}
-                  name="message"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel htmlFor="message">
-                        {object?.sendEmail?.form?.message?.label}
-                      </FormLabel>
-                      <FormControl>
-                        <Textarea
-                          id="message"
-                          required
-                          placeholder={
-                            object?.sendEmail?.form?.message?.placeholder
-                          }
-                          {...field}
-                        />
-                      </FormControl>
-                      <FormDescription />
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-              </div>
-
-              <Button type="submit" className="w-full" disabled={isSending}>
-                {isSending ? (
-                  "Sending..."
-                ) : (
-                  <>
-                    <Mail className="mr-2 h-4 w-4" />
-                    {object?.sendEmail?.form?.sendButton?.label}
-                  </>
-                )}
-              </Button>
-
-              {/* <ContactForm /> */}
-            </form>
-          </Form>
-        </div>
-      </div>
-    </div>
+      </section>
+    </>
   );
-};
-
-export default Page;
+}

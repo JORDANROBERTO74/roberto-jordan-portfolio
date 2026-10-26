@@ -1,49 +1,41 @@
 "use client";
 
-import { useLocale, useMessages } from "next-intl";
-import { usePathname, useRouter } from "@/i18n/navigation";
-import { useTransition } from "react";
-import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuRadioGroup,
-  DropdownMenuRadioItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Languages } from "lucide-react";
+import { Link, usePathname } from "@/i18n/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { routing } from "@/i18n/routing";
 
 export default function LocaleSwitcher() {
-  const [isPending, startTransition] = useTransition();
-  const router = useRouter();
   const pathname = usePathname();
   const locale = useLocale();
-  const messages = useMessages();
-  const object: any = messages?.header;
-
-  const onSelectChange = (nextLocale: string) => {
-    startTransition(() => {
-      router.replace(pathname, { locale: nextLocale });
-    });
-  };
+  const t = useTranslations("header.languageButton");
 
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger disabled={isPending} asChild>
-        <Button variant="outline" className="w-full justify-start">
-          <Languages className="mr-2 h-4 w-4" />
-          {locale.toUpperCase()}
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-[200px]">
-        <DropdownMenuRadioGroup value={locale} onValueChange={onSelectChange}>
-          {object?.languageButton?.languages?.map((item: any) => (
-            <DropdownMenuRadioItem key={item.id} value={item.id}>
-              {item.name}
-            </DropdownMenuRadioItem>
-          ))}
-        </DropdownMenuRadioGroup>
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div
+      role="group"
+      aria-label={t("label")}
+      className="flex items-center gap-1.5 font-mono text-[11px] uppercase tracking-[0.16em]"
+    >
+      {routing.locales.map((item, index) => (
+        <span key={item} className="flex items-center gap-1.5">
+          {index > 0 && (
+            <span aria-hidden className="text-border">
+              /
+            </span>
+          )}
+          <Link
+            href={pathname}
+            locale={item}
+            aria-current={locale === item ? "true" : undefined}
+            className={
+              locale === item
+                ? "text-foreground"
+                : "text-muted-foreground transition-colors hover:text-foreground"
+            }
+          >
+            {item}
+          </Link>
+        </span>
+      ))}
+    </div>
   );
 }

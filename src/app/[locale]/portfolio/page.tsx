@@ -1,91 +1,94 @@
-"use client";
+import { setRequestLocale } from "next-intl/server";
+import { getArchiveProjects, getCaseStudies, getContent } from "@/content";
+import type { Locale } from "@/content/types";
+import ProjectEntry from "@/components/project-entry";
+import ProjectCard from "@/components/project-card";
+import { pageMetadata } from "@/lib/metadata";
 
-import React from "react";
-import { motion } from "framer-motion";
-import TypewriterAnimation from "@/components/typewriterAnimation";
-import { Separator } from "@/components/ui/separator";
-import Image from "next/image";
-import { useMessages } from "next-intl";
-import ProjectCard from "@/components/projectCard";
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  const content = getContent(locale as Locale);
 
-const Page = () => {
-  const messages = useMessages();
+  return pageMetadata({
+    locale: locale as Locale,
+    path: "/portfolio",
+    title: content.portfolio.eyebrow,
+    description: content.portfolio.lead,
+  });
+}
 
-  const object: any = messages?.home;
-  const projects: any = messages?.projects;
-  const projectList = projects?.slice().reverse();
+export default async function PortfolioPage({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}) {
+  const { locale } = await params;
+  const typedLocale = locale as Locale;
+  setRequestLocale(locale);
+
+  const content = getContent(typedLocale);
+  const portfolio = content.portfolio;
+  const caseStudies = getCaseStudies(typedLocale);
+  const archive = getArchiveProjects(typedLocale);
 
   return (
-    <div>
-      <div className="w-full h-full md:h-[82vh] flex items-start justify-center pb-[20vh]">
-        <div className="flex flex-col md:flex-row items-center gap-16 md:gap-6 w-full h-full">
-          <div className="flex flex-col justify-center gap-2 w-full h-full">
-            <TypewriterAnimation
-              texts={[
-                {
-                  type: "h1",
-                  content: object?.title,
-                  className: "text-6xl font-bold tracking-tighter md:text-8xl",
-                },
-                {
-                  type: "p",
-                  content: object?.subtitle,
-                  className: "text-gray-500 text-2xl dark:text-gray-400",
-                },
-              ]}
-            />
-            <motion.p
-              className="text-xl"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 5.5, duration: 1 }}
-            >
-              {object?.paragraph1}
-            </motion.p>
-          </div>
-          <div className="flex items-center justify-center w-full h-full">
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ duration: 1 }}
-            >
-              <Image
-                src="/img/devices.png"
-                alt="devices"
-                width={450}
-                height={316}
-                priority
-              />
-            </motion.div>
-          </div>
+    <>
+      <section className="border-b border-border">
+        <div className="container-page py-16 md:py-24">
+          <p className="label-mono">{portfolio.eyebrow}</p>
+          <h1 className="mt-8 max-w-4xl font-display text-[clamp(2.75rem,7vw,5.5rem)] leading-[0.96] tracking-[-0.02em] text-balance">
+            {portfolio.title}
+          </h1>
+          <p className="mt-8 max-w-2xl text-base leading-relaxed text-muted-foreground md:text-lg">
+            {portfolio.lead}
+          </p>
         </div>
-      </div>
+      </section>
 
-      <div className="w-full h-full flex flex-col gap-6 items-center justify-center py-10 md:py-0">
-        <div className="flex flex-col gap-2 w-full">
-          <div className="flex items-center gap-6 justify-between w-full">
-            <div className="hidden md:block w-full">
-              <Separator />
-            </div>
-            <div className="text-center text-2xl font-bold w-full md:max-w-fit">
-              {object?.projects?.title}
-            </div>
-            <div className="hidden md:block w-full">
-              <Separator />
-            </div>
-          </div>
-          <div className="text-center gap-2 text-gray-500 md:text-xl dark:text-gray-400">
-            <span className="mr-2">{object?.projects?.subtitle}</span>
-          </div>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projectList?.map((project: any) => (
-            <ProjectCard key={project?.name} project={project} />
+      <section className="container-page pb-16 pt-12 md:pb-24 md:pt-16">
+        <p className="label-mono">{portfolio.selectedLabel}</p>
+        <div className="mt-8">
+          {caseStudies.map((project, index) => (
+            <ProjectEntry
+              key={project.slug}
+              project={project}
+              locale={typedLocale}
+              index={`0${index + 1}`}
+              priority={index === 0}
+            />
           ))}
         </div>
-      </div>
-    </div>
-  );
-};
+      </section>
 
-export default Page;
+      <section className="border-t border-border">
+        <div className="container-page py-16 md:py-24">
+          <div className="grid gap-6 md:grid-cols-12 md:items-end">
+            <div className="md:col-span-7">
+              <p className="label-mono">{portfolio.archiveLabel}</p>
+              <h2 className="mt-4 font-display text-4xl tracking-tight md:text-5xl">
+                {portfolio.archiveTitle}
+              </h2>
+            </div>
+            <p className="max-w-md text-sm leading-relaxed text-muted-foreground md:col-span-4 md:col-start-9 md:text-base">
+              {portfolio.archiveLead}
+            </p>
+          </div>
+
+          <div className="mt-12 grid gap-x-8 gap-y-12 sm:grid-cols-2 lg:grid-cols-4">
+            {archive.map((project) => (
+              <ProjectCard
+                key={project.slug}
+                project={project}
+                locale={typedLocale}
+              />
+            ))}
+          </div>
+        </div>
+      </section>
+    </>
+  );
+}
