@@ -35,6 +35,6 @@
 
 ## Deployment
 
-- Repo: pending
-- Live: pending
+- Repo: <https://github.com/JORDANROBERTO74/roberto-jordan-portfolio>
+- Live: <https://roberto-jordan-portfolio.vercel.app>
 - Release: pending

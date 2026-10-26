@@ -93,9 +93,11 @@ The project deploys to Vercel with the default Next.js preset: `npm run build`, 
 
 No custom domain is configured.
 
+Live demo: <https://roberto-jordan-portfolio.vercel.app>
+
 ## Status and scope
 
-Verified: `npm run typecheck`, `npm run lint`, `npm run build`, and headless checks of `/en`, `/es` and the about, portfolio and contact routes in both locales at 1440×900 and 390×844 with no console errors or horizontal overflow.
+Verified: `npm run typecheck`, `npm run lint`, `npm run build`, and headless checks of `/en`, `/es` and the about, portfolio and contact routes in both locales at 1440×900 and 390×844 with no console errors or horizontal overflow. The production deployment was checked again on the live URL with the same routes and assets.
 
 Known limits: the contact form is not exercised end to end (a real submission would send an email); there is no `sitemap.xml`, `robots.txt` or Open Graph image; the animated intro delays the home and about copy for a few seconds; and `npm audit` still reports advisories in Next.js 14 and `next-intl` 3 that need major-version upgrades.
 
