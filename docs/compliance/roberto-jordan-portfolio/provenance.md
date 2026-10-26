@@ -36,5 +36,5 @@
 ## Deployment
 
 - Repo: <https://github.com/JORDANROBERTO74/roberto-jordan-portfolio>
-- Live: <https://roberto-jordan-portfolio.vercel.app>
+- Live: <https://robertojordan.vercel.app>
 - Release: pending

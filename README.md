@@ -93,7 +93,7 @@ The project deploys to Vercel with the default Next.js preset: `npm run build`, 
 
 No custom domain is configured.
 
-Live demo: <https://roberto-jordan-portfolio.vercel.app>
+Live demo: <https://robertojordan.vercel.app>
 
 ## Status and scope
 
