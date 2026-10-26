@@ -16,7 +16,8 @@ import { routing } from "@/i18n/routing";
 
 const fontSans = FontSans({
   subsets: ["latin"],
-  variable: "--font-sans",
+  variable: "--font-inter",
+  display: "swap",
 });
 
 export const metadata: Metadata = {
